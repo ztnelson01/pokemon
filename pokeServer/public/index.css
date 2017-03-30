@@ -1,0 +1,69 @@
+img{
+  width:100%;
+  border-radius: 15px;
+}
+
+button{
+  font-size: 20px !important;
+}
+
+.center{
+  text-align: center;
+  font-size: 30px;
+}
+
+#victory1{
+  font-size: 40px;
+}
+
+#victory2{
+  font-size: 40px;
+}
+
+.setHeight{
+  height:400px;
+}
+.attacks{
+  position:absolute;
+  bottom:0;
+  text-align: center;
+  margin: auto;
+}
+
+.whiteOnDark{
+  color:white;
+  background-color: rgba(0,0,0,.7);
+  border-radius: 15px;
+  height:60vh;
+  overflow: hidden;
+}
+
+.darkOnWhite{
+  color:black;
+  background-color: rgba(255,255,255,.6);
+  border-radius: 15px;
+  height:60vh;
+  position: relative;
+}
+
+ul{
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+li{
+  font-size: 15px;
+  margin:0;
+  margin-top: 5px;
+}
+body{
+    background-image: url('http://www.pageresource.com/wallpapers/wallpaper/salamence-poke-ball-pokemon_166669.jpg');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+html{
+  height:100%;
+}
