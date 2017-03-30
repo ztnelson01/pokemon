@@ -1,5 +1,15 @@
 var express = require('express');
 var router = express.Router();
+var mongoose = require('mongoose')
+mongoose.connect('mongodb://localhost/battleResultsDB')
+
+var battleResultsSchema = mongoose.Schema({
+    Names: String,
+    Victory1: Number,
+    Victory2: Number
+});
+
+var battleResult = mongoose.model('battleResult', battleResultsSchema);
 
 var typeIndex = ["normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground", "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"];
 var typeModifier = [
@@ -178,14 +188,18 @@ var pokemon2 = {};
 var switching = false;
 
 var generateNewBattle = function(){
-    var random1 = Math.floor(Math.random() * (pokemonList.length));
-    var random2 = Math.floor(Math.random() * (pokemonList.length));
+    var random1 = -1; var random2 = -1;
+    while (random1 == random2){
+      random1 = Math.floor(Math.random() * (pokemonList.length));
+      random2 = Math.floor(Math.random() * (pokemonList.length));
+    }
     var pokeInfo1 = pokemonList[random1];
     var pokeInfo2 = pokemonList[random2];
+
     pokemon1 = new pokemon(pokeInfo1.number, pokeInfo1.name,pokeInfo1.type,pokeInfo1.image,pokeInfo1.hp,pokeInfo1.attack1Name,pokeInfo1.attack2Name, pokeInfo1.attack, pokeInfo1.defense);
-    pokemon1.hp *=10;
+    //pokemon1.hp *=10;
     pokemon2 = new pokemon(pokeInfo2.number, pokeInfo2.name,pokeInfo2.type,pokeInfo2.image,pokeInfo2.hp,pokeInfo2.attack1Name,pokeInfo2.attack2Name, pokeInfo2.attack, pokeInfo1.defense);
-    pokemon2.hp *=10;
+    //pokemon2.hp *=10;
     switching = false;
 }
 generateNewBattle();
@@ -209,10 +223,94 @@ router.get('/fightingPokemon', function (req, res) {
     var victor = 0;
     if (pokemon1.hp == 0) victor = 2;
     else if (pokemon2.hp == 0) victor = 1;
-    res.send({"1":pokemon1, "2":pokemon2, "victor":victor, "log":log});
+    var name1 = pokemon1.name;
+    var name2 = pokemon2.name;
+    var combinedNames = "";
+    if (name1 > name2) combinedNames = name1 + " " +  name2;
+    else combinedNames = name2 + " " + name1;
+
+    battleResult.findOne({'Names':combinedNames}, function(err, result){
+        var leftWins = 0;
+        var rightWins = 0;
+        if (result && combinedNames.split(' ')[0] == pokemon1.name) {
+            leftWins = result.Victory1;
+            rightWins = result.Victory2;
+        }
+        else if (result){
+
+            leftWins = result.Victory2;
+            rightWins = result.Victory1;
+        }
+        res.send({"1":pokemon1, "2":pokemon2, "victor":victor, "log":log, "leftWins":leftWins, "rightWins":rightWins});
+    });
+
 })
 
 
+function updateWinRecord(victor){
+    console.log("victor", victor);
+    var name1 = pokemon1.name;
+    var name2 = pokemon2.name;
+    var combinedNames = "";
+    if (name1 > name2) {
+      combinedNames = name1 + " " + name2;
+    }
+    else {
+      combinedNames = name2 + " " + name1;
+    }
+
+    console.log("updating win recordfor: ", combinedNames);
+    battleResult.findOne({'Names':combinedNames}, function(err, result){
+
+
+
+        if (result == null){
+            var entry = {};
+            entry.Names = combinedNames;
+            if (victor == 2) {
+                if (name1 > name2){
+                    entry.Victory1 = 0;
+                    entry.Victory2 = 1;
+                }
+                else {
+                  entry.Victory1 = 1;
+                  entry.Victory2 = 0;
+                }
+            }
+            else {
+              if (name1 < name2){
+                  entry.Victory1 = 0;
+                  entry.Victory2 = 1;
+              }
+              else {
+                entry.Victory1 = 1;
+                entry.Victory2 = 0;
+              }
+            }
+            var thisResult = new battleResult(entry);
+            thisResult.save();
+        }
+        else{
+          if (victor == 2) {
+              if (name1 > name2){
+                  result.Victory2++;
+              }
+              else {
+                result.Victory1++;
+              }
+          }
+          else {
+            if (name1 < name2){
+                result.Victory2++;
+            }
+            else {
+              result.Victory1++
+            }
+          }
+          result.save();
+        }
+    });
+}
 //takes in {"attacker":1, "move":"psychic"}
 router.post('/attack', function (req, res) {
     if (switching) return;
@@ -248,10 +346,12 @@ router.post('/attack', function (req, res) {
         defender.hp = 0;
         victor = req.body.attacker;
         if (!switching){
+            setTimeout(function() { generateNewBattle(); }, 5000);
             switching = true;
             var tempStuff= defender.name + " fainted!!!";
             log.push({"count":log.length, "text":tempStuff});
-            setTimeout(function() { generateNewBattle(); }, 5000);
+            updateWinRecord(victor)
+
         }
     }
 

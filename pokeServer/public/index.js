@@ -18,7 +18,9 @@ $('#poke2Attack1').css('background-color', 'green');
 $('#poke2Attack2').css('background-color', 'green');
 
 var loadCurrent = function(){
-  $.get( "http://35.164.221.44:3000/fightingPokemon", function( data ) {
+  $.get( "http://34.208.82.175:8022/fightingPokemon", function( data ) {
+      var winRateHTML = "Wins: " + data.leftWins + "  Wins: " + data.rightWins;
+      $('#winrates').html(winRateHTML);
       console.log(data);
       $('#name1').text(data[1].name);
       $('#name2').text(data[2].name);
@@ -84,7 +86,7 @@ var doAttack = function(attacker, move){
     $('#poke2Attack1').css('background-color', 'grey');
     $('#poke2Attack2').css('background-color', 'grey');
     var body = {"attacker":attacker, "move":move};
-    $.post( "http://35.164.221.44:3000/attack", body,  function( data ) {
+    $.post( "http://34.208.82.175:8022/attack", body,  function( data ) {
         $('#hp1').text("HP: " + data[1].hp);
         $('#hp2').text("HP: " + data[2].hp);
 
@@ -100,7 +102,7 @@ var doAttack = function(attacker, move){
 
 window.setInterval(function(){
     loadCurrent();
-}, 500);
+}, 2000);
 
 $('#poke1Attack1').click(function(){
     doAttack(1,1);
